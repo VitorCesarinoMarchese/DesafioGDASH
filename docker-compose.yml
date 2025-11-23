@@ -35,3 +35,27 @@ services:
       retries: 5
     ports:
       - "8000:8000"
+  go-worker:
+    build: ./go-worker
+    container_name: go-worker
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      API_URL: "http://nestjs-api:3000/api/weather/logs"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      nestjs-api:
+        condition: service_started
+    environment:
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      API_URL: ${API_URL}
+      NESTJS_ENDPOINT: ${NESTJS_ENDPOINT}
+      RETRY_ATTEMPTS: ${RETRY_ATTEMPTS}
+      RETRY_DELAY_MS: ${RETRY_DELAY_MS}
+      HTTP_TIMEOUT_MS: ${HTTP_TIMEOUT_MS}
+      RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH}
+)
