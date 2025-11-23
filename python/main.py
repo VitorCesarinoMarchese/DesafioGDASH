@@ -106,7 +106,8 @@ def worker_loop():
             print("menssagem enviada para fila:", clima)
             time.sleep(30)
         except Exception as e:
-            print("ERROR IN WORKER LOOP:", e)
+            print("ERROR IN WORKER LOOP:")
+            print(e)
             time.sleep(10)
 
 

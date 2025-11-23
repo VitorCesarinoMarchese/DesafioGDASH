@@ -1,4 +1,36 @@
 services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: mongodb
+
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
@@ -35,17 +67,15 @@ services:
       retries: 5
     ports:
       - "8000:8000"
+
   go-worker:
     build: ./go-worker
     container_name: go-worker
-    environment:
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      API_URL: "http://nestjs-api:3000/api/weather/logs"
     depends_on:
       rabbitmq:
         condition: service_healthy
       nestjs-api:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: ${RABBITMQ_HOST}
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
@@ -58,4 +88,29 @@ services:
       RETRY_DELAY_MS: ${RETRY_DELAY_MS}
       HTTP_TIMEOUT_MS: ${HTTP_TIMEOUT_MS}
       RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH}
-)
+    healthcheck:
+      test: ["CMD", "pgrep", "go"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nestjs-api:
+    build: ./backend
+    container_name: nestjs-api
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:
+
