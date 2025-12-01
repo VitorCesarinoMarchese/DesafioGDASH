@@ -88,6 +88,12 @@ func NormalizeAndValidate(raw map[string]interface{}) (*WeatherMsg, error) {
 		return nil, errors.New("missing or invalid 'vento'")
 	}
 
+	if f, ok := getFloat("ceu"); ok {
+		msg.Ceu = f
+	} else {
+		return nil, errors.New("missing or invalid 'ceu'")
+	}
+
 	if f, ok := getFloat("probabilidade_chuva"); ok {
 		msg.ProbabilidadeChuva = f
 	} else if f, ok := getFloat("precipitation_probability"); ok {

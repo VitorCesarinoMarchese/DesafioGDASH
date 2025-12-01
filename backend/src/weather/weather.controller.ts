@@ -3,7 +3,7 @@ import { WeatherService } from './weather.service';
 import { CreateWeatherLogDto } from './dto/create-weather-log.dto';
 import type { WeatherLog } from './interfaces/weather-log.interface';
 
-@Controller('api/weather')
+@Controller('weather')
 export class WeatherController {
   constructor(private readonly weatherService: WeatherService) { }
 
